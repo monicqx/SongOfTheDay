@@ -3,9 +3,7 @@ def get_token():
     # File has to be in same folder as main.py.
     with open("token.txt", "r") as f:
         for line in f:
-            token = line
-            break  # There should only be one line in this file anyway.
-    return token
+            return line
 
 
 def main():
