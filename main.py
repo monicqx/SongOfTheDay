@@ -23,14 +23,11 @@ class Bot:
     def __init__(self, token):
         self.token = token
         self.base_url = "https://api.telegram.org/bot{}/".format(self.token)
-
-    def compute_updates_url(self):
-        return self.base_url + "getUpdates"
+        self.updates_url = self.base_url + "getUpdates"
 
     def get_updates(self):
-        updates_url = self.compute_updates_url()
-        print("Getting updates from: " + updates_url)
-        json_object = get_json_from_url(updates_url)
+        print("Getting updates from: " + self.updates_url)
+        json_object = get_json_from_url(self.updates_url)
         return json_object
 
 
