@@ -6,14 +6,14 @@ def get_token():
     # File has to be in same folder as main.py.
     with open("token.txt", "r") as f:
         for line in f:
-            return line
+            return line.strip()
 
 
 BASE_URL = "https://api.telegram.org/bot{}/".format(get_token())
 
 
 def get_content(url):
-    response = requests.get(url)
+    response = requests.get(url, timeout=0.1)
     return response.content.decode("utf8")
 
 
