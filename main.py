@@ -24,17 +24,32 @@ class Bot:
         self.token = token
         self.base_url = "https://api.telegram.org/bot{}/".format(self.token)
         self.updates_url = self.base_url + "getUpdates"
+        self.send_message_url_format=self.base_url+"sendMessage?text={}&chat_id={}"
 
     def get_updates(self):
         print("Getting updates from: " + self.updates_url)
         json_object = get_json_from_url(self.updates_url)
         return json_object
 
+    def get_last_chat_id_and_text(self, updates):
+        updates_num = len(updates["result"])
+        last_update = updates_num - 1
+        text = updates["result"][last_update]["message"]["text"]
+        chat_id = updates["result"][last_update]["message"]["chat"]["id"]
+        return text, chat_id
+
+    def send_message(self, text, chat_id):
+        url = self.send_message_url_format.format(text, chat_id)
+        get_content(url)
+
 
 def main():
     bot = Bot(get_token())
     updates = bot.get_updates()
-    print(updates)
+    text, chat_id = bot.get_last_chat_id_and_text(updates)
+    print(text, chat_id)
+    bot.send_message("Aloha", chat_id)
+
 
 
 if __name__ == "__main__":
