@@ -1,5 +1,6 @@
 import json
 import requests
+import time
 
 
 def get_token():
@@ -31,25 +32,35 @@ class Bot:
         json_object = get_json_from_url(self.updates_url)
         return json_object
 
-    def get_last_chat_id_and_text(self, updates):
+    def get_last_update_info(self, updates):
         updates_num = len(updates["result"])
         last_update = updates_num - 1
-        text = updates["result"][last_update]["message"]["text"]
         chat_id = updates["result"][last_update]["message"]["chat"]["id"]
-        return text, chat_id
+        message_id = updates["result"][last_update]["message"]["message_id"]
+        message_text = updates["result"][last_update]["message"]["text"]
+        return chat_id, message_id, message_text
 
     def send_message(self, text, chat_id):
+        print("Sending message " + text + " to chat_id:" + str(chat_id))
         url = self.send_message_url_format.format(text, chat_id)
         get_content(url)
 
 
 def main():
     bot = Bot(get_token())
-    updates = bot.get_updates()
-    text, chat_id = bot.get_last_chat_id_and_text(updates)
-    print(text, chat_id)
-    bot.send_message("Aloha", chat_id)
 
+    last_update_info = (None, None, None)
+    while True:
+        chat_id, message_id, message_text = bot.get_last_update_info(bot.get_updates())
+        if (chat_id, message_id, message_text) != last_update_info:
+            bot.send_message(message_text, chat_id)
+            last_update_info = (chat_id, message_id, message_text)
+        time.sleep(0.5)
+
+    # updates = bot.get_updates()
+    # chat_id, text = bot.get_last_chat_id_and_text(updates)
+    # print(text, chat_id)
+    # bot.send_message("Mwahhh", chat_id)
 
 
 if __name__ == "__main__":
