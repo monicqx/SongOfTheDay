@@ -11,7 +11,7 @@ def get_token():
 
 
 def get_content(url):
-    response = requests.get(url, timeout=0.1)
+    response = requests.get(url, timeout=5)
     return response.content.decode("utf8")
 
 
@@ -20,17 +20,25 @@ def get_json_from_url(url):
     return json_object
 
 
+def get_max_id(updates):
+    update_ids = []
+    for update in updates["result"]:
+        update_ids.append(int(update["update_id"]))
+    return max(update_ids)
+
+
 class Bot:
     def __init__(self, token):
         self.token = token
         self.base_url = "https://api.telegram.org/bot{}/".format(self.token)
-        self.updates_url = self.base_url + "getUpdates"
-        self.send_message_url_format=self.base_url+"sendMessage?text={}&chat_id={}"
+        self.updates_url = self.base_url + "getUpdates?timeout=4"
+        self.send_message_url_format = self.base_url + "sendMessage?text={}&chat_id={}"
 
-    def get_updates(self):
-        print("Getting updates from: " + self.updates_url)
-        json_object = get_json_from_url(self.updates_url)
-        return json_object
+    def get_updates(self, offset=None):
+        url = self.updates_url
+        if offset:
+            url += "&offset={}".format(offset)
+        return get_json_from_url(url)
 
     def get_last_update_info(self, updates):
         updates_num = len(updates["result"])
@@ -45,22 +53,26 @@ class Bot:
         url = self.send_message_url_format.format(text, chat_id)
         get_content(url)
 
+    def echo_all(self, updates):
+        for update in updates["result"]:
+            try:
+                text = update["message"]["text"]
+                chat = update["message"]["chat"]["id"]
+                self.send_message(text, chat)
+            except Exception as e:
+                print(e)
+
 
 def main():
     bot = Bot(get_token())
 
-    last_update_info = (None, None, None)
+    last_update_id = 713828276
     while True:
-        chat_id, message_id, message_text = bot.get_last_update_info(bot.get_updates())
-        if (chat_id, message_id, message_text) != last_update_info:
-            bot.send_message(message_text, chat_id)
-            last_update_info = (chat_id, message_id, message_text)
+        updates = bot.get_updates(last_update_id)
+        if len(updates["result"]) > 0:
+            last_update_id = get_max_id(updates) + 1
+            bot.echo_all(updates)
         time.sleep(0.5)
-
-    # updates = bot.get_updates()
-    # chat_id, text = bot.get_last_chat_id_and_text(updates)
-    # print(text, chat_id)
-    # bot.send_message("Mwahhh", chat_id)
 
 
 if __name__ == "__main__":
